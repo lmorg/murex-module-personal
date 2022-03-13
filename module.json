@@ -1,0 +1,17 @@
+[
+	{
+		"Name": "typescript",
+		"Summary": "Typescript tools",
+		"Version": "1.0",
+		"Source": "typescript.mx",
+		"Dependencies": {
+			"Optional": [],
+			"Required": [
+				"node",
+				"npm",
+				"tsc"
+			],
+			"Platform": [ "any" ]
+		}
+	}
+]

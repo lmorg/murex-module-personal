@@ -1,0 +1,52 @@
+function tsc-node {
+    # TypeScript execution: runs `tsc` followed by `node` 
+
+    trypipe {
+        set file = ${ $PARAMS[0] -> regexp s/\.ts$// }
+        
+        out "{BLUE}Compiling...{RESET}"
+        tsc $file.ts
+        out "{BLUE}Executing...{RESET}"
+        node $file.js
+    }
+}
+
+autocomplete set tsc-node { [{
+    "IncFiles": true,
+    "FileRegexp": (\.ts)
+}] }
+
+alias ts=npx ts-node
+
+autocomplete set ts { [{
+    "IncFiles": true,
+    "FileRegexp": (\.ts)
+}] }
+
+function ts-install {
+    # Install a TypeScript module
+    
+    trypipe {
+        $PARAMS[0] -> set module
+        npm install $module --save
+        npm install \@types/$module --save-dev
+    }
+}
+
+function ts-init {
+    out: "Creating a default tsconfig.json"
+    out: {
+    "compilerOptions": {
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "lib": ["es2020"],
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "target": "es2020"
+    }
+} |> tsconfig.json
+
+    out: "Installing ts-node...."
+    npm install ts-node
+}
