@@ -13,5 +13,18 @@
 			],
 			"Platform": [ "any" ]
 		}
+	},
+	{
+		"Name": "misc",
+		"Summary": "Miscellaneous tools",
+		"Version": "1.0",
+		"Source": "misc.mx",
+		"Dependencies": {
+			"Optional": [],
+			"Required": [
+				"git"
+			],
+			"Platform": [ "any" ]
+		}
 	}
 ]

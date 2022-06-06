@@ -1,0 +1,18 @@
+function git-https2git {
+	trypipe {
+		set file=.git/config
+		open $file -> regexp (s|https://github.com/|git@github.com:|) -> set config
+		$config |> $file
+	}
+}
+
+function tname {
+	# Change the tmux window name
+	out @PARAMS -> set name
+	tmux set-option allow-rename on
+	({ESC}k${$name}{ESC}\)
+}
+
+function aws-docker-eu-west-1 {
+	aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin $AWS_IDENT[account].dkr.ecr.eu-west-1.amazonaws.com
+}
