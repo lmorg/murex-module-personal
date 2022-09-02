@@ -1,0 +1,212 @@
+config: set shell pre-cache-hint-summaries true
+config: set secret path ~/dev/secrets
+config: set secret recipient mail@laurencemorgan.co.uk
+
+#
+#export PATH=$PATH:$GOPATH/bin:~/bin:~/.cargo/bin
+
+export EDITOR=vi
+
+# Improve readability of `ls`
+export TIME_STYLE=long-iso
+export BLOCK_SIZE="'1"
+
+alias grep=grep --color=auto
+if { os linux } then { alias ls=ls --color=auto }
+
+if { which vim } then { alias vi=vim }
+
+# https://github.com/sharkdp/bat
+if { which bat } then {
+    alias cat=bat
+    summary cat ${man-summary cat}
+}
+
+# https://github.com/sharkdp/lsd
+# https://github.com/ryanoasis/nerd-fonts/
+#if { which lsd } then { 
+#    alias ls=lsd
+#    summary ls ${man-summary ls}
+#}
+
+function pless {
+    # less for JSON
+    -> trypipe { -> pretty -> less }
+}
+
+function mkpath {
+    # make a directory then change to that new dir (assumes `-p` flag where supported)
+    try {
+        switch ${os} {
+            case windows { tout json {} }
+            case linux   { tout json {[ "-p", "--" ]} }
+            catch        { tout json {[ "-p" ]} }
+        } -> set flags
+
+        mkdir @flags $ARGS[1]
+        cd $ARGS[1]
+    }
+}
+
+config set shell titlebar-func {
+    version --no-app-name
+}
+
+if { and { $TMUX } { $MUREX_DEV -> ! } } then {
+    tmux list-windows -> grep * -> regexp (f/\(([0-9]+) panes\)/) -> set num tmux_panes
+    if { = tmux_panes == 1 } then {
+        read name "What shall I call this TMUX window? "
+        if { $name } then {
+            tname $name
+        } else {
+            config set proc echo-tmux true
+            config set shell titlebar-func { pwd_short -> egrep -o '[^/]+$' }
+        }
+    }
+}
+
+config set shell hint-text-func {
+    trypipe <!null> {
+        git status --porcelain -b -> set gitstatus
+        #$gitstatus -> head -n1 -> sed -r 's/^## //;s/\.\.\./ => /' -> set gitbranch
+        $gitstatus -> head -n1 -> regexp 's/^## //' -> regexp 's/\.\.\./ => /' -> set gitbranch
+        let gitchanges=${ out $gitstatus -> sed 1d -> wc -l }
+        !if { $gitchanges } then { ({GREEN}) } else { ({RED}) }
+        (Git{BLUE} $gitbranch ($gitchanges pending) )
+    }
+    catch {
+        ({YELLOW}Git{BLUE} Not a git repository )
+    }
+
+    if { $SSH_AGENT_PID } then {
+        ({GREEN}SSH{BLUE} $SSH_AGENT_PID )
+    } else {
+        ({RED}SSH{BLUE} no agent ) 
+    }
+    
+    if { pgrep: vpnc } then {
+        ({YELLOW}VPN{BLUE}: vpnc is active )
+    }
+
+    if { ps aux -> regexp m/openvpn --errors-to-stderr --log/ } then {
+        ({YELLOW}VPN{BLUE} openvpn is active )
+    }
+    
+    trypipe <!null> {
+        open: main.tf -> format json -> [ terraform ] -> [ 0 ] -> [ required_version ] -> sed -r 's/\s0\./ /' -> set tfmod
+        terraform: version -> head -n1 -> regexp (f/Terraform v0\.([0-9.]+)$) -> set tfver
+        if { = tfmod >= tfver } then { ({GREEN}) } else { ({RED}) }
+        (Terraform{BLUE} $tfver; required $tfmod )
+    }
+    if { g: main.tf } then {
+        !if { $TF_VERSION } then {
+            terraform: version -> head -n1 -> regexp (f/Terraform v([.0-9]+)) -> global TF_VERSION
+        }
+        ({GREEN}TF{BLUE} $TF_VERSION )
+    } 
+
+    if { $AWS_SESSION_TOKEN } then {
+        !if { $AWS_SESSION_EXPIRATION } then {
+            !if { $AWS_IDENT } then {
+                event: onSecondsElapsed aws_bg=1 { !event: onSecondsElapsed aws_bg; aws: sts get-caller-identity -> cast json -> global AWS_IDENT }
+                event: onSecondsElapsed aws_ident=${=5*60} {
+                    aws: <!null> sts get-caller-identity -> cast json -> global AWS_IDENT
+                    !if { $AWS_IDENT[arn] } then {
+                        !event: onSecondsElapsed aws_ident
+                        !global: AWS_IDENT
+                        !export: AWS_SESSION_TOKEN
+                        !export: AWS_ACCESS_KEY_ID
+                        !export: AWS_SECRET_ACCESS_KEY
+                    }
+                } 
+            }
+            $AWS_IDENT[arn] -> regexp (f|assumed-role/.*?_(.*)_|) -> set arn
+            #aws organizations describe-account --account-id $ident[account] -> set accname
+            if { $arn } then {
+                ({GREEN}AWS{BLUE} $AWS_IDENT[account] ($arn) )
+            } else {
+                ({RED}AWS{BLUE} $AWS_IDENT)
+            }
+        } else {
+            set aws_expiration
+            set int date=${ date +%s }
+     
+            if { os linux } then {
+                set int aws_expiration=${ date -d $AWS_SESSION_EXPIRATION +%s }
+            } else {
+                set int aws_expiration=${ date -j -f "%FT%R:%SZ" $AWS_SESSION_EXPIRATION +%s }
+            }
+
+            = (($aws_expiration-$date)/60) -> format int -> set aws_session_time
+            if { = aws_session_time < 1 } then { ({RED}) } else { ({GREEN}) }
+            (awscon{BLUE} $AWS_SESSION_NAME => $aws_session_time mins )
+        }
+    }
+}
+
+
+#############
+## KEYBASE ##
+#############
+
+autocomplete set keybase { [{
+    "DynamicDesc": ({
+        #keybase: -> @[ ^COMMANDS:\$..^\$ ]re -> sort -> set keybase
+        #map { $keybase[ :0 ] -> regexp s/,// } { $keybase -> regexp 'f/\t+(.*?)$' }
+        keybase -> @[^COMMANDS..^ADDITIONAL]re -> tabulate: --split-comma --map
+    }),
+    "ListView": true,
+    "FlagValues": {
+        "pgp": [{
+            "DynamicDesc": ({
+                keybase help pgp -> @[^COMMANDS..^ADDITIONAL]re -> tabulate: --split-comma --map
+            }),
+            "ListView": true
+        }]
+    }
+}] }
+
+private occ.choice {
+    # Function for presenting and executing a choice. Use in onCommandCompletion events
+    !while { = yn=~`[YyNn]` } {
+        read --prompt ${out "{GREEN}Do you want to run:{YELLOW}" @PARAMS "{GREEN}[Y/n]{RESET} "} \
+             --variable yn \
+             --default y || set yn=n
+    }
+
+    if { = yn =~ `[Yy]` } then {
+        out ">>>" @PARAMS
+        exec @PARAMS
+    }
+}
+
+event: onCommandCompletion sudo-pacman=pacman {
+    -> [interrupt] -> set event
+    read-named-pipe: $event[stderr] -> set stderr
+    if { $stderr -> regexp m/(error: you cannot perform this operation unless you are root)/ } then {
+        occ.choice sudo $event[command] @{$event[parameters]}
+    }
+}
+
+alias git=git -c color.ui=always
+event: onCommandCompletion git-branch-push=git {
+    -> [interrupt] -> set event
+    read-named-pipe: $event[stderr] -> set stderr
+    if { $stderr -> regexp m/(fatal:.*has no upstream branch)/ } then {
+        git status --porcelain -b -> head -n1 -> regexp 's/^## //' -> regexp 's/\.\.\./ => /' -> set str git_branch
+        occ.choice git push --set-upstream origin $git_branch
+    }
+    if { $stderr -> regexp (m/Permission denied \(publickey\)/) } then {
+        agent
+        occ.choice git @{ $event[parameters] }
+    }
+    if { $stderr -> regexp (m/Cloning into '.*?'/) } then {
+        $stderr -> regexp (f/'(.*?)'/) -> set cd
+        out ">>>" cd $cd
+        cd $cd
+    }
+}
+
+alias dig=dig +noall +answer
+
+config: set shell auto-glob true

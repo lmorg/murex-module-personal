@@ -26,5 +26,18 @@
 			],
 			"Platform": [ "any" ]
 		}
+	},
+	{
+		"Name": "profile",
+		"Summary": "",
+		"Version": "1.0",
+		"Source": "profile.mx",
+		"Dependencies": {
+			"Optional": [],
+			"Required": [
+				"git"
+			],
+			"Platform": [ "posix" ]
+		}
 	}
 ]
