@@ -29,7 +29,7 @@
 	},
 	{
 		"Name": "profile",
-		"Summary": "",
+		"Summary": "My common murex profile",
 		"Version": "1.0",
 		"Source": "profile.mx",
 		"Dependencies": {
