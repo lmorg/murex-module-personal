@@ -30,10 +30,12 @@
 	{
 		"Name": "profile",
 		"Summary": "My common murex profile",
-		"Version": "1.0",
+		"Version": "1.1",
 		"Source": "profile.mx",
 		"Dependencies": {
-			"Optional": [],
+			"Optional": [
+				"dig"
+			],
 			"Required": [
 				"git"
 			],

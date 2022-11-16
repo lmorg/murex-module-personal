@@ -208,5 +208,10 @@ event: onCommandCompletion git-branch-push=git {
 }
 
 alias dig=dig +noall +answer
+function dug {
+    # A bit like dig but with outputs JSON
+    exec dig +yaml @PARAMS -> cast yaml -> [0] -> [message] -> format json
+}
+config eval shell safe-commands {-> append dig dug } 
 
-config: set shell auto-glob true
+#config: set shell auto-glob true
