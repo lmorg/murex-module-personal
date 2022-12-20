@@ -168,13 +168,13 @@ autocomplete set keybase { [{
 
 private occ.choice {
     # Function for presenting and executing a choice. Use in onCommandCompletion events
-    !while { = yn=~`[YyNn]` } {
+    !while { $yn =~ "[YyNn]" } {
         read --prompt ${out "{GREEN}Do you want to run:{YELLOW}" @PARAMS "{GREEN}[Y/n]{RESET} "} \
              --variable yn \
              --default y || set yn=n
     }
 
-    if { = yn =~ `[Yy]` } then {
+    if { $yn =~ "[Yy]" } then {
         out ">>>" @PARAMS
         exec @PARAMS
     }
@@ -192,7 +192,7 @@ alias git=git -c color.ui=always
 event: onCommandCompletion git-branch-push=git {
     -> [interrupt] -> set event
     read-named-pipe: $event[stderr] -> set stderr
-    if { $stderr -> regexp m/(fatal:.*has no upstream branch)/ } then {
+    if { $stderr -> regexp (m/fatal:.*?has no upstream branch/) } then {
         git status --porcelain -b -> head -n1 -> regexp 's/^## //' -> regexp 's/\.\.\./ => /' -> set str git_branch
         occ.choice git push --set-upstream origin $git_branch
     }
