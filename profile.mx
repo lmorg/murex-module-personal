@@ -183,12 +183,12 @@ private occ.choice {
 event: onCommandCompletion sudo-pacman=pacman {
     -> [interrupt] -> set event
     read-named-pipe: $event[stderr] -> set stderr
-    if { $stderr -> regexp m/(error: you cannot perform this operation unless you are root)/ } then {
+    if { $stderr -> regexp (m/error: you cannot perform this operation unless you are root/) } then {
         occ.choice sudo $event[command] @{$event[parameters]}
     }
 }
 
-alias git=git -c color.ui=always
+#alias git=git -c color.ui=always
 event: onCommandCompletion git-branch-push=git {
     -> [interrupt] -> set event
     read-named-pipe: $event[stderr] -> set stderr
