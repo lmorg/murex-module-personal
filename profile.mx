@@ -1,6 +1,6 @@
 config: set shell pre-cache-hint-summaries true
 config: set secret path ~/dev/secrets
-config: set secret recipient mail@laurencemorgan.co.uk
+config: set secret recipient laurence.morgan@flawlessai.com
 
 #
 #export PATH=$PATH:$GOPATH/bin:~/bin:~/.cargo/bin
@@ -60,7 +60,7 @@ if { and { $TMUX } { $MUREX_DEV -> ! } } then {
             tname $name
         } else {
             config set proc echo-tmux true
-            config set shell titlebar-func { pwd_short -> egrep -o '[^/]+$' }
+            config set shell titlebar-func { $PWD[-1] }
         }
     }
 }

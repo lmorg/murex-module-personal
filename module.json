@@ -30,7 +30,7 @@
 	{
 		"Name": "profile",
 		"Summary": "My common murex profile",
-		"Version": "2.0",
+		"Version": "3.0",
 		"Source": "profile.mx",
 		"Dependencies": {
 			"Optional": [
