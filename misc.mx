@@ -8,9 +8,9 @@ function git-https2git {
 
 function tname {
 	# Change the tmux window name
-	out @PARAMS -> set name
+	#out @PARAMS -> set name
 	tmux set-option allow-rename on
-	({ESC}k${$name}{ESC}\)
+	tout str ({ESC}k$(PARAMS.0){ESC}\)
 }
 
 function aws-docker-eu-west-1 {

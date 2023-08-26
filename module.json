@@ -41,5 +41,17 @@
 			],
 			"Platform": [ "posix" ]
 		}
+	},
+	{
+		"Name": "starship",
+		"Summary": "experimental starship config",
+		"Version": "1.0",
+		"Source": "starship.mx",
+		"Dependencies": {
+			"Required": [
+				"starship"
+			],
+			"Platform": [ "posix" ]
+		}
 	}
 ]

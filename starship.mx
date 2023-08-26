@@ -1,0 +1,44 @@
+
+ENV.STARSHIP_SHELL = "murex"
+ENV.STARSHIP_SESSION_KEY = starship(session)
+
+private starship_prompt {
+    cast str
+
+    NUM_JOBS=0
+    # Evaluate the number of jobs before running the preserved prompt command, so that tools
+    # like z/autojump, which background certain jobs, do not cause spurious background jobs
+    # to be displayed by starship. Also avoids forking to run `wc`, slightly improving perf.
+    #for job in $(jobs -p); do [[ $job ]] && ((NUM_JOBS++)); done
+
+    exitnum -> set STARSHIP_CMD_STATUS
+
+    # Prepare the timer data, if needed.
+    if { $STARSHIP_START_TIME } then {
+        now = datetime(--in {now} --out {unix})
+        DURATION = $now - $STARSHIP_START_TIME
+      
+        starship prompt -s $STARSHIP_CMD_STATUS -j $NUM_JOBS -d $DURATION
+        unset STARSHIP_START_TIME
+    } else {
+        printf ${starship prompt -s $STARSHIP_CMD_STATUS -j $NUM_JOBS}
+    }
+}
+
+event onPrompt starship=before {
+    prompt = starship_prompt()
+    GLOBAL.STARSHIP_HINT   = $prompt[1]
+    GLOBAL.STARSHIP_PROMPT = $prompt[2]
+}
+
+event onPrompt starship=after {
+    ENV.STARSHIP_START_TIME = datetime(--in {now} --out {unix})
+}
+
+config set shell hint-text-func {
+    out $STARSHIP_HINT
+}
+
+config set shell prompt {
+    out $STARSHIP_PROMPT
+}

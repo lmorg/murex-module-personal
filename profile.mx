@@ -1,4 +1,3 @@
-config: set shell pre-cache-hint-summaries true
 config: set secret path ~/dev/secrets
 config: set secret recipient laurence.morgan@flawlessai.com
 
@@ -65,7 +64,7 @@ if { and { $TMUX } { $MUREX_DEV -> ! } } then {
     }
 }
 
-config set shell hint-text-func {
+/#config set shell hint-text-func {
     trypipe <!null> {
         git status --porcelain -b -> set gitstatus
         #$gitstatus -> head -n1 -> sed -r 's/^## //;s/\.\.\./ => /' -> set gitbranch
@@ -142,7 +141,7 @@ config set shell hint-text-func {
             (awscon{BLUE} $AWS_SESSION_NAME => $aws_session_time mins )
         }
     }
-}
+}#/
 
 
 #############
