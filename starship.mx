@@ -27,8 +27,8 @@ private starship_prompt {
 
 event onPrompt starship=before {
     prompt = starship_prompt()
-    GLOBAL.STARSHIP_HINT   = $prompt[1]
-    GLOBAL.STARSHIP_PROMPT = $prompt[2]
+    MOD.STARSHIP_HINT   = $prompt[1]
+    MOD.STARSHIP_PROMPT = $prompt[2]
 }
 
 event onPrompt starship=after {
@@ -36,9 +36,20 @@ event onPrompt starship=after {
 }
 
 config set shell hint-text-func {
-    out $STARSHIP_HINT
+    out $MOD.STARSHIP_HINT
 }
 
 config set shell prompt {
-    out $STARSHIP_PROMPT
+    out $MOD.STARSHIP_PROMPT
 }
+
+autocomplete set starship %[
+    {
+        DynamicDesc: '{ starship help -> tabulate --split-comma --map }'
+        ListView: true
+    }
+    {
+        DynamicDesc: '{ starship help @PARAMS -> tabulate --split-comma --map --key-inc-hint }'
+        ListView: true
+    }
+]
