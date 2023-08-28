@@ -1,4 +1,3 @@
-
 ENV.STARSHIP_SHELL = "murex"
 ENV.STARSHIP_SESSION_KEY = starship(session)
 
@@ -21,7 +20,7 @@ private starship_prompt {
         starship prompt -s $STARSHIP_CMD_STATUS -j $NUM_JOBS -d $DURATION
         unset STARSHIP_START_TIME
     } else {
-        printf ${starship prompt -s $STARSHIP_CMD_STATUS -j $NUM_JOBS}
+        starship prompt -s $STARSHIP_CMD_STATUS -j $NUM_JOBS
     }
 }
 
