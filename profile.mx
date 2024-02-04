@@ -53,7 +53,7 @@ config set shell titlebar-func {
 
 if { and { $TMUX } { $MUREX_DEV -> ! } } then {
     tmux list-windows -> grep * -> regexp (f/\(([0-9]+) panes\)/) -> set num tmux_panes
-    if { = tmux_panes == 1 } then {
+    if { tmux_panes == 1 } then {
         read name "What shall I call this TMUX window? "
         if { $name } then {
             tname $name
