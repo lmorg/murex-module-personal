@@ -1,8 +1,4 @@
 config: set secret path ~/dev/secrets
-config: set secret recipient laurence.morgan@flawlessai.com
-
-#
-#export PATH=$PATH:$GOPATH/bin:~/bin:~/.cargo/bin
 
 export EDITOR=vi
 
@@ -51,7 +47,7 @@ config set shell titlebar-func {
     version --no-app-name
 }
 
-if { and { $TMUX } { $MUREX_DEV -> ! } } then {
+/#if { and { $TMUX } { $MUREX_DEV -> ! } } then {
     tmux list-windows -> grep * -> regexp (f/\(([0-9]+) panes\)/) -> set num tmux_panes
     if { tmux_panes == 1 } then {
         read name "What shall I call this TMUX window? "
@@ -62,39 +58,28 @@ if { and { $TMUX } { $MUREX_DEV -> ! } } then {
             config set shell titlebar-func { $PWD[-1] }
         }
     }
-}
+}#/
 
-/#config set shell hint-text-func {
+config set shell hint-text-func {
     trypipe <!null> {
         git status --porcelain -b -> set gitstatus
-        #$gitstatus -> head -n1 -> sed -r 's/^## //;s/\.\.\./ => /' -> set gitbranch
         $gitstatus -> head -n1 -> regexp 's/^## //' -> regexp 's/\.\.\./ => /' -> set gitbranch
-        let gitchanges=${ out $gitstatus -> sed 1d -> wc -l }
-        !if { $gitchanges } then { ({GREEN}) } else { ({RED}) }
+        $gitchanges = ${ out $gitstatus -> sed 1d -> wc -l -> format int }
+        if { $gitchanges > 0 } then { ({RED}) } else { ({GREEN}) }
         (Git{BLUE} $gitbranch ($gitchanges pending) )
     }
-    catch {
-        ({YELLOW}Git{BLUE} Not a git repository )
-    }
+    catch { ({YELLOW}Git{BLUE} Not a git repository ) }
 
     if { $SSH_AGENT_PID } then {
         ({GREEN}SSH{BLUE} $SSH_AGENT_PID )
     } else {
         ({RED}SSH{BLUE} no agent ) 
     }
-    
-    if { pgrep: vpnc } then {
-        ({YELLOW}VPN{BLUE}: vpnc is active )
-    }
 
-    if { ps aux -> regexp m/openvpn --errors-to-stderr --log/ } then {
-        ({YELLOW}VPN{BLUE} openvpn is active )
-    }
-    
     trypipe <!null> {
         open: main.tf -> format json -> [ terraform ] -> [ 0 ] -> [ required_version ] -> sed -r 's/\s0\./ /' -> set tfmod
         terraform: version -> head -n1 -> regexp (f/Terraform v0\.([0-9.]+)$) -> set tfver
-        if { = tfmod >= tfver } then { ({GREEN}) } else { ({RED}) }
+        if { $tfmod >= $tfver } then { ({GREEN}) } else { ({RED}) }
         (Terraform{BLUE} $tfver; required $tfmod )
     }
     if { g: main.tf } then {
@@ -102,9 +87,13 @@ if { and { $TMUX } { $MUREX_DEV -> ! } } then {
             terraform: version -> head -n1 -> regexp (f/Terraform v([.0-9]+)) -> global TF_VERSION
         }
         ({GREEN}TF{BLUE} $TF_VERSION )
-    } 
+    }
 
-    if { $AWS_SESSION_TOKEN } then {
+    if { $AWS_PROFILE } then {
+        ({GREEN}AWS Profile{BLUE} $AWS_PROFILE)
+    }
+
+    /#if { $AWS_SESSION_TOKEN } then {
         !if { $AWS_SESSION_EXPIRATION } then {
             !if { $AWS_IDENT } then {
                 event: onSecondsElapsed aws_bg=1 { !event: onSecondsElapsed aws_bg; aws: sts get-caller-identity -> cast json -> global AWS_IDENT }
@@ -136,12 +125,12 @@ if { and { $TMUX } { $MUREX_DEV -> ! } } then {
                 set int aws_expiration=${ date -j -f "%FT%R:%SZ" $AWS_SESSION_EXPIRATION +%s }
             }
 
-            = (($aws_expiration-$date)/60) -> format int -> set aws_session_time
-            if { = aws_session_time < 1 } then { ({RED}) } else { ({GREEN}) }
+            ($aws_expiration - $date) / 60 -> format int -> set aws_session_time
+            if { $aws_session_time < 1 } then { ({RED}) } else { ({GREEN}) }
             (awscon{BLUE} $AWS_SESSION_NAME => $aws_session_time mins )
         }
-    }
-}#/
+    }#/
+}
 
 
 #############
@@ -200,7 +189,7 @@ event: onCommandCompletion git-branch-push=git {
         occ.choice git @{ $event[parameters] }
     }
     if { $stderr -> regexp (m/Cloning into '.*?'/) } then {
-        $stderr -> regexp (f/'(.*?)'/) -> set cd
+        $stderr -> regexp "f/'(.*?)'/" -> set cd
         out ">>>" cd $cd
         cd $cd
     }
@@ -212,5 +201,3 @@ function dug {
     exec dig +yaml @PARAMS -> cast yaml -> [0] -> [message] -> format json
 }
 config eval shell safe-commands {-> append dig dug } 
-
-#config: set shell auto-glob true
