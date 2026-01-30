@@ -1,0 +1,33 @@
+function jira {
+	agent_config = %{
+		mcp: {
+			servers: {
+				atlassian: {
+					command: npx
+					args: [ "-y", "mcp-remote", "https://mcp.atlassian.com/v1/sse" ]
+				}
+			}
+		}
+		systemPrompt: jira.md
+		userPrompt: ${ echo @PARAMS }
+	}
+
+	tout str "{ESC}_ai;agent;$(agent_config){ESC}\\"
+}
+
+function notion {
+	agent_config = %{
+		mcp: {
+			servers: {
+				notion: {
+					command: npx
+					args: [ "-y", "mcp-remote", "https://remote.mcp.server/sse" ]
+				}
+			}
+		}
+		systemPrompt: notion.md
+		userPrompt: ${ echo @PARAMS }
+	}
+
+	tout str "{ESC}_ai;agent;$(agent_config){ESC}\\"
+}

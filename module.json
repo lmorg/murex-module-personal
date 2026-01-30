@@ -53,5 +53,15 @@
 			],
 			"Platform": [ "posix" ]
 		}
+	},
+	{
+		"Name": "ai",
+		"Summary": "Tools for working with LLMs",
+		"Version": "1.0",
+		"Source": "ai.mx",
+		"Dependencies": {
+			"Required": [],
+			"Platform": [ "any" ]
+		}
 	}
 ]
